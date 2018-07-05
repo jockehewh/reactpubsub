@@ -1,0 +1,16 @@
+{
+  "name": "reactpubsub",
+  "version": "1.0.0",
+  "description": "",
+  "main": "krps.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "circular-json": "^0.5.4",
+    "koa": "^2.5.1",
+    "ws": "^5.2.1"
+  }
+}

@@ -1,0 +1,78 @@
+*{margin:0; padding:0; user-select: none;
+    --rouge-brick-pale: #ef5350;
+    --rouge-brique-eclatant: #ff5252;
+    --bleu-indigo-leger: #5c6bc0;
+    --bleu-indigo-eclatant: #536dfe;
+    --orange-pale: #e64a19;
+    --bleu-gris-clair: #cfd8dc;
+    --teal-bleu-special: #1de9b6;
+    --gris-sombre-palette: #2d2f33;
+}
+/* 
+    couleurs:
+    #ef5350 rouge brique pale
+    #ff5252 rouge brick eclatant
+    #5c6bc0 bleu indigo leger
+    #536dfe bleu indigo eclatant
+    #e64a19 orange pale 
+    #cfd8dc bleu gris clair
+    #1de9b6 teal bleu special
+*/
+body{
+    height:100vh;
+    width: 100vw;
+}
+ul{
+    list-style: none;
+}
+#header{
+    background-color: var(--bleu-indigo-eclatant);
+}
+.container{
+    display: flex;
+    flex-direction: row;
+}
+#main{
+    background-color: var(--bleu-gris-clair);
+    max-width: 90vw;
+}
+.sideb{
+    width:9vw;
+}
+#footer{
+    background-color: var(--gris-sombre-palette);
+}
+ul.chat-menu{
+    display: flex;
+    flex-direction: row;
+    height: 65px;
+    flex-wrap: wrap;
+}
+li.chat-tab{
+    background-color: var(--orange-pale);
+    height: 25px;
+}
+ul.chat-content{
+    display:flex;
+    flex-direction: column;
+}
+li.tab-content{
+    height: auto;
+}
+ul.discussion{
+    display: flex;
+    justify-content: flex-end;
+}
+.discussion li{
+    max-width: 300px;
+    max-height: 90px;
+    padding: 15px;
+}
+.received{
+    color: var(--bleu-indigo-leger);
+    padding:15px;
+}
+.sended{
+    color: var(--teal-bleu-special);
+    padding:15px;
+}
