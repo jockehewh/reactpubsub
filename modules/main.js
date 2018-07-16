@@ -11,18 +11,17 @@ const jss = JSON.stringify
     #cfd8dc bleu gris clair
     #1de9b6 teal bleu special
 */
-
 var identity = ""
 var amis = []
 /* 
 **
 */
 const element =  j('h1', {class:'text'}, 'Hello World')
-
+// demande d'indentification
 function login(props){
     return j('div', {class: 'logindiv'}, [
         j('p', null, 'Entrez votre prénom pour commencer:'),
-        j('input', {type: 'text', placeholder:'Votre nom ici.'}),
+        j('input', {type: 'text', placeholder:'Votre prénom ici.'}),
         j('button', {onClick: ()=>{
             var nominput = document.querySelector('.logindiv input');
             if(nominput.value !== "" && nominput.value !== undefined){
@@ -36,6 +35,7 @@ function login(props){
         }}, 'Commencer')
     ])
 }
+// organise et affiche les messages des diferentes discussion
 function chat(props){
     //AFFICHAGE GENERAL
      var msgs = props.messages.map(message =>{
@@ -65,6 +65,33 @@ function chat(props){
         input.addEventListener('keydown', (e)=>{
             if(e.code === 'Enter' || e.code === 'NumpadEnter'){
                 console.log(e.code+' has been pressed')
+                // GERER L'ENVOIS DU MESSAGE
+                console.log(e.target.parentNode.parentNode.parentNode.getAttribute('dataname'))
+                console.log(e)
+                console.log(input.value)
+                var lemessage = {
+                    sender: identity,
+                    receiver: e.target.parentNode.parentNode.parentNode.getAttribute('dataname'),
+                    message: input.value
+                }
+                var msgEnvoyé = document.createElement('li')
+                msgEnvoyé.classList.add('sended')
+                msgEnvoyé.innerText = input.value
+                e.target.parentNode.parentNode.appendChild(msgEnvoyé)
+                if(!localStorage[lemessage.receiver]){
+                    var newchat = {
+                        nom: lemessage.receiver,
+                        messages:[{message: lemessage.message, sender: lemessage.sender}]
+                    }
+                    localStorage[lemessage.receiver] = jss(newchat)
+                }else{
+                    var data = jsp(localStorage[lemessage.receiver])
+                    data.messages.push({message: lemessage.message, sender: lemessage.sender})
+                    localStorage[lemessage.receiver] = jss(data)
+                }
+                props.webex.send(jss({unmessage: lemessage}))
+                input.remove()
+
             }
         })
         e.currentTarget.appendChild(li)
@@ -72,33 +99,40 @@ function chat(props){
     }},
     msgs)
 }
-
-async function chargeMessages(nomAmi){
+// charge les messages si le contact existe. cree un contact si le contact n'existe pas
+async function chargeMessages(nomAmi, props){
+    console.log(props)
     if(localStorage[nomAmi] === undefined){
         var newAmi = {
             name: nomAmi,
-            messages: []
+            messages: [{}]
         }
         localStorage[nomAmi] = jss(newAmi)
-        window[nomAmi] = []
-        ReactDOM.render(j(chatTab, {contact: nomAmi}, null), document.querySelector('.body'))
+        var text = await jsp(localStorage[nomAmi]);
+        window[nomAmi] = text.messages
+        ReactDOM.render(j(chatTab, {contact: nomAmi, webex: props.webex}, null), document.querySelector('.body'))
     }else{
         var text = await jsp(localStorage[nomAmi]);
         var disc = text.messages.map(msg=>{
             return msg
         })
         console.log(disc)
+        if(disc.length === 0){
+            disc.push({message: '', sender: identity})
+        }
         window[nomAmi] = disc
-        ReactDOM.render(j(chatTab, {contact: nomAmi}, null), document.querySelector('.body'))
+        localStorage[nomAmi] = jss(text)
+        ReactDOM.render(j(chatTab, {contact: nomAmi, webex: props.webex}, null), document.querySelector('.body'))
     }
 }
+// transmet la liste d'amis et le websocket au composant SideBar
 function listAmis(props){
         var amisliste = amis.map(ami=>{
             return j('li', {class:'ami'}, ami)
         })
         ReactDOM.render(j(sideBar, {listeA: amisliste, webex: props.webex}, null), document.querySelector('.sideb'))
 }
-
+// cree la sidebar qui permet d'ajouter des amis et d'afficher sa liste d'amis
 class sideBar extends React.Component{
     constructor(props){
         super(props)
@@ -112,11 +146,13 @@ class sideBar extends React.Component{
                 var lademande = document.querySelector('.ajoutamis').value;
                 if(lademande != ''){
                     this.props.webex.send(jss({ajout: {ask:identity ,req:lademande}}))
+                    chargeMessages(lademande, {webex: this.props.webex})
                 }
             }}, 'Ajouter')
         ])
     }
 }
+// cree la mise en page et affiche les discussion :/AREFAIRE
 class chatTab extends React.Component{
     constructor(props){
         super(props);
@@ -129,10 +165,11 @@ class chatTab extends React.Component{
     render(){
         console.log(this.props.contact)
         this.menu.push(j('li', {class: 'chat-tab', dataname: this.props.contact}, this.props.contact))
-        this.chats.push(j('li', {class: 'tab-content', dataname: this.props.contact}, chat({messages: window[this.props.contact]})))
+        this.chats.push(j('li', {class: 'tab-content', dataname: this.props.contact}, chat({messages: window[this.props.contact], webex: this.props.webex})))
         return [j('ul', {class: 'chat-menu'}, ["Mes discussions en cours ", this.menu.map((item)=>{return item})]), j('ul', {class: 'chat-content'}, this.chats)]
     }
 }
+// composant de pied de page
 function footerComp(props){
     return j('div', {class:'footy'}, [
         j('p', null, 'Bienvenue sur React')
@@ -149,6 +186,10 @@ function iter(props){
     }
     return j('ul', null, itemtab)
 }
+/*
+ composant principale, verifie l'existence de l'utilisateur
+ et gère le websocket
+ */ 
 class bodyclass extends React.Component{
     constructor(props){
         super(props)
@@ -165,7 +206,9 @@ class bodyclass extends React.Component{
         }
 
         webex.onopen = ()=>{
+            listAmis({webex:webex})
             webex.send(jss({connexionde: identity}))
+            //TEST D'AJOUT EN AMIS
             webex.send(jss({ajout: {ask:identity ,req:'nouveau'}}))
         }
         webex.onmessage = (data)=>{
@@ -173,12 +216,15 @@ class bodyclass extends React.Component{
             console.log(usabledata)
             if(usabledata.discussions){
                 amis.push(usabledata.discussions)
-                chargeMessages(usabledata.discussions)
+                chargeMessages(usabledata.discussions, {webex:webex})
                 //LISTE D AMIS
                 listAmis({webex:webex})
             }
             if(usabledata.unedemande && usabledata.unedemande !== identity){
-                chargeMessages(usabledata.unedemande)
+                chargeMessages(usabledata.unedemande, {webex:webex})
+            }
+            if(usabledata.listeamis){
+                console.log(usabledata.listeamis)
             }
         }
     }

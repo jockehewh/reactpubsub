@@ -26,7 +26,7 @@ krps.listen(9898, ()=>{
     getUsers.on('data', (data)=>{
         utilisateursCollection += data
     }).on('end', ()=>{
-        utilisateursCollection = JSON.parse(utilisateursCollection)
+        utilisateursCollection = [JSON.parse(utilisateursCollection)]
     })
     krpsWS.on('connection', (peer)=>{
         peer.on('message', (data)=>{
@@ -35,6 +35,7 @@ krps.listen(9898, ()=>{
                 var allusers = utilisateursCollection.map(connected=>{
                     return connected.nom
                 })
+                console.log('+++++', allusers)
                 if(allusers.indexOf(usabledata.connexionde) === -1){
                     console.log('newUser')
                     var newUser = {
@@ -82,6 +83,7 @@ krps.listen(9898, ()=>{
             */
             if(usabledata.ajout){
                 utilisateursCollection.forEach((obj) =>{
+                    console.log('----------', obj.nom)
                     if(obj.nom === usabledata.ajout.req){
                         utilisateursCollection.forEach(ami=>{
                             if(ami.nom === usabledata.ajout.ask){
@@ -100,15 +102,19 @@ krps.listen(9898, ()=>{
                                 amis: utilisateur.amis,
                             }
                         })
+                        console.log(temp)
                         uc.saveUsers(temp)
                     }
                     
                 })
             }
+            if(usabledata.unmessage){
+                console.log(usabledata)
+            }
             console.log(usabledata)
             
             //console.log(krpsWS.clients)
-        })
+        })// onmessage <<<
     })
     console.log('en ecoute port 9898')
 })
